@@ -1,10 +1,10 @@
-/* dotNOVI Application Styles — NOVI Hogeschool huisstijl */
+/* dotNOVI Application Styles — Dockerfile Hogeschool huisstijl */
 
 /* Google Fonts: Poppins (body) */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* NOVI Colors */
+  /* Dockerfile Colors */
   --novi-blue: #4747E0;
   --novi-blue-dark: #3636B0;
   --novi-blue-light: #6B6BF0;
@@ -64,7 +64,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0 var(--space-lg);
 }
 
-/* Header — NOVI blue with organic shape accent */
+/* Header — Dockerfile blue with organic shape accent */
 header {
   background-color: var(--novi-blue);
   color: var(--novi-white);
@@ -115,7 +115,7 @@ header .subtitle {
   opacity: 0.85;
 }
 
-/* Navigation — dark nav with NOVI accents */
+/* Navigation — dark nav with Dockerfile accents */
 .navbar {
   background-color: var(--novi-dark);
   padding: 0;
@@ -393,7 +393,7 @@ pre code {
   font-size: 0.9em;
 }
 
-/* Footer — dark with NOVI accents */
+/* Footer — dark with Dockerfile accents */
 footer {
   background-color: var(--novi-dark);
   color: var(--novi-white);

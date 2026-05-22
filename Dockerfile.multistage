@@ -1,0 +1,41 @@
+FROM ubuntu:latest
+LABEL authors="Lionl"
+
+ENTRYPOINT ["top", "-b"]
+
+# Stage 1 - Builder
+
+# FROM: Base image starten
+FROM node:20 AS builder
+
+# LABEL: Metadata
+LABEL maintainer="NOVI"
+
+# WORKDIR: Werkmapje in container
+WORKDIR /app
+
+# COPY: Bestanden van host naar container
+COPY package*.json ./
+
+# RUN: Commando's uitvoeren
+RUN npm ci --only=production
+
+# COPY: Meer bestanden
+COPY src ./src
+COPY tests ./tests
+
+# RUN: Commando's uitvoeren
+RUN npm ci --only=production
+
+# Stage 2 - Production
+FROM node:20-alpine AS production
+
+# LABEL: Metadata
+LABEL maintainer="NOVI"
+
+# WORKDIR: Werkmapje in container
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci

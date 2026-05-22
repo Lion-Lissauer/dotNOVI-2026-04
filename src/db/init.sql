@@ -12,6 +12,6 @@ CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
 
 -- Insert sample data
 INSERT INTO notes (title, content) VALUES
-  ('Welcome to dotNOVI', 'This is a simple note-taking application built for NOVI Hogeschool DevOps course.'),
+  ('Welcome to dotNOVI', 'This is a simple note-taking application built for Dockerfile Hogeschool DevOps course.'),
   ('DevOps Introduction', 'DevOps is a set of practices that combines software development and IT operations.')
 ON CONFLICT DO NOTHING;

@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: novi
+      POSTGRES_PASSWORD: plop123
+      POSTGRES_DB: node
+    ports: ["3000:3000"]
+    volumes:
+      - ./src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: app
+    ports: ["5432:5432"]
+    environment:
+      DATABASE_URL: postgres://postgres:${DB_PASSWORD:-postgrespassword}@postgres:5432/dotnovi
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
