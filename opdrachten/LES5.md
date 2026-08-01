@@ -136,13 +136,13 @@ Automatically:
 # Scopes needed: read:packages, write:packages, delete:packages
 
 # Export token
-export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
+$env:GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 
 # Login locally
-echo $GITHUB_TOKEN | docker login ghcr.io -u username --password-stdin
+echo $env:GITHUB_TOKEN | docker login ghcr.io -u username --password-stdin
 
 # Verify
-docker pull ghcr.io/username/dotnovi:latest
+docker pull ghcr.io/lion-lissauer/dotnovi:latest
 ```
 
 ### Stap 2: Setup GitHub Secrets
