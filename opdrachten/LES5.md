@@ -142,7 +142,7 @@ $env:GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 echo $env:GITHUB_TOKEN | docker login ghcr.io -u username --password-stdin
 
 # Verify
-docker pull ghcr.io/lion-lissauer/dotnovi:latest
+docker pull ghcr.io/lion-lissauer/dotnovi:main-98eaa20
 ```
 
 ### Stap 2: Setup GitHub Secrets
@@ -182,7 +182,7 @@ git push origin main
 ```bash
 # Go to Actions → Deploy to Production
 # Click "Run workflow"
-# Input image tag: ghcr.io/username/dotnovi:latest
+# Input image tag: ghcr.io/lion-lissauer/dotnovi:latest
 # Click "Run workflow"
 ```
 
