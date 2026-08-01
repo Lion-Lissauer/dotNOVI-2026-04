@@ -31,7 +31,7 @@ jobs:
 
       - name: Start container
         env:
-          IMAGE_TAG: ${{ github.event.client_payload.image_tag || inputs.image_tag }}
+          IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
           DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
         run: |
           docker run -d -p 3000:3000 -e DATABASE_URL=$DATABASE_URL ghcr.io/lion-lissauer/dotnovi-2026-04:$IMAGE_TAG
