@@ -182,7 +182,7 @@ git push origin main
 ```bash
 # Go to Actions → Deploy to Production
 # Click "Run workflow"
-# Input image tag: ghcr.io/lion-lissauer/dotnovi:latest
+# Input image tag: ghcr.io/lion-lissauer/dotnovi-2026-04:latest
 # Click "Run workflow"
 ```
 

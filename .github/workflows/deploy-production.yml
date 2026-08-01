@@ -32,15 +32,31 @@ jobs:
       - name: Start container
         env:
           IMAGE_TAG: ${{ github.event.client_payload.image_tag || inputs.image_tag }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
         run: |
-          docker run -d -p 3000:3000 $IMAGE_TAG
+          echo "Starting container with image: $IMAGE_TAG"
+          docker run -d -p 3000:3000 \
+            -e DATABASE_URL=$DATABASE_URL \
+            $IMAGE_TAG
 
-      - name: Wait for service
+      - name: Show container logs
         run: |
-          for i in {1..20}; do
-            curl -f http://localhost:3000/health && break
-            sleep 2
+          echo "Container logs:"
+          docker logs $(docker ps -q)
+
+      - name: Wait for service to be ready
+        run: |
+          echo "Waiting for service to become ready..."
+          for i in {1..30}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Service is ready!"
+              break
+            fi
+            echo "Service not ready yet (status: $STATUS). Retrying..."
+            sleep 3
           done
+
       - name: Run smoke tests
         run: |
           # Wait for service to be ready
