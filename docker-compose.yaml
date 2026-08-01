@@ -4,9 +4,9 @@ services:
     container_name: postgres
     environment:
       POSTGRES_USER: novi
-      POSTGRES_PASSWORD: plop123
+      POSTGRES_PASSWORD: devops123
       POSTGRES_DB: node
-    ports: ["3000:3000"]
+    ports: ["5432:5432"]
     volumes:
       - ./src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql
@@ -15,9 +15,9 @@ services:
   app:
     build: .
     container_name: app
-    ports: ["5432:5432"]
+    ports: ["3000:3000"]
     environment:
-      DATABASE_URL: postgres://postgres:${DB_PASSWORD:-postgrespassword}@postgres:5432/dotnovi
+      DATABASE_URL: postgres://novi:devops123@postgres:5432/node
     depends_on:
       - postgres
     restart: unless-stopped

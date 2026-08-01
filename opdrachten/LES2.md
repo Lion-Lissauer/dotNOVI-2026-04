@@ -110,7 +110,7 @@ cd ../../../dotNOVI-app
 docker build -t dotnovi:latest .
 
 # Controleer image
-docker images | grep dotnovi
+docker images | select-string dotnovi
 ```
 
 ### Stap 4: Run Container
@@ -133,15 +133,10 @@ docker stop dotnovi-app
 
 ```bash
 # Met DATABASE_URL
-docker run -d \
-  -p 3000:3000 \
-  -e DATABASE_URL="postgresql://user:pass@postgres:5432/dotnovi" \
-  -e PORT=3000 \
-  --name dotnovi-app \
-  dotnovi:latest
+docker run -d -p 3000:3000 -e DATABASE_URL="postgresql://user:pass@postgres:5432/dotnovi" -e PORT=3000 --name dotnovi-app dotnovi:latest
 
 # Check omgeving in container
-docker exec dotnovi-app env | grep DATABASE_URL
+docker exec dotnovi-app env | Select-String DATABASE_URL
 ```
 
 ## Opdrachten
@@ -201,17 +196,10 @@ Start een PostgreSQL container en verbind je app ermee.
 
 ```bash
 # 1. Start een PostgreSQL container
-docker run -d --name dotnovi-db \
-  -e POSTGRES_USER=dotnovi \
-  -e POSTGRES_PASSWORD=devops123 \
-  -e POSTGRES_DB=dotnovi \
-  -p 5432:5432 \
-  postgres:18-alpine
+docker run -d --name dotnovi-db -e POSTGRES_USER=dotnovi -e POSTGRES_PASSWORD=devops123 -e POSTGRES_DB=dotnovi -p 5432:5432 postgres:18-alpine
 
 # 2. Herstart de app met DATABASE_URL
-docker run -d -p 3000:3000 \
-  -e DATABASE_URL=postgresql://dotnovi:devops123@host.docker.internal:5432/dotnovi \
-  --name dotnovi dotnovi:v1
+docker run -d -p 3000:3000 -e DATABASE_URL=postgresql://dotnovi:devops123@host.docker.internal:5432/dotnovi --name dotnovi dotnovi:v1
 
 # 3. Test of de app de database bereikt
 curl http://localhost:3000/health
