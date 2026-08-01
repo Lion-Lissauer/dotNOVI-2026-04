@@ -44,6 +44,10 @@ jobs:
             -e DATABASE_URL="$DATABASE_URL" \
             $IMAGE_REF
 
+      - name: Show container exit code
+        run: |
+          docker ps -a
+
       - name: Debug container env
         run: |
           curl -f http://localhost:3000/debug/env
@@ -52,7 +56,7 @@ jobs:
       - name: Show container logs
         run: |
           echo "Container logs:"
-          docker logs $(docker ps -q)
+          docker logs $(docker ps -a -q)
 
       # 5. Show running containers
       - name: Show running containers
