@@ -27,6 +27,7 @@ jobs:
       with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+
     - name: Install Dependencies
       run: npm ci
 
@@ -47,3 +48,17 @@ jobs:
 #    - name: Run lint
 #      run: npm run lint --if-present
 
+deploy:
+  needs: [test, build]
+  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Deploy to production
+      run: echo "Deploying..."
+
+  name: Security Scan
+
+  on:
+    schedule:
+      - cron: '0 2 * * *'  # Daily at 2 AM
