@@ -44,6 +44,10 @@ jobs:
             -e DATABASE_URL="$DATABASE_URL" \
             $IMAGE_REF
 
+      - name: Debug container env
+        run: |
+          curl -f http://localhost:3000/debug/env
+
       # 4. Show logs
       - name: Show container logs
         run: |

@@ -47,6 +47,12 @@ app.get('/health/simple', (req, res) => {
   res.status(200).send('OK');
 });
 
+app.get('/debug/env', (req, res) => {
+  res.json({
+    DATABASE_URL: process.env.DATABASE_URL,
+    NODE_ENV: process.env.NODE_ENV || 'not set'
+  });
+});
 
 /**
  * 404 handler

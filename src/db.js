@@ -7,13 +7,14 @@ const { Pool } = pg;
 
 // Only create pool if DATABASE_URL is configured
 const pool = process.env.DATABASE_URL
-  ? new Pool({
+    ? new Pool({
       connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },   // ⭐ REQUIRED for hosted Postgres
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
     })
-  : null;
+    : null;
 
 if (pool) {
   pool.on('error', (err) => {
