@@ -45,7 +45,7 @@ export async function getClient() {
 // Health check
 export async function healthCheck() {
   if (!pool) {
-    console.warn('Database not configured (no DATABASE_URL) - running without database');
+    console.warn('Database not configured (no DATABASE_URL)');
     return false;
   }
   try {
