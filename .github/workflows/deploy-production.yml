@@ -34,10 +34,7 @@ jobs:
           IMAGE_TAG: ${{ github.event.client_payload.image_tag || inputs.image_tag }}
           DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
         run: |
-          echo "Starting container with image: $IMAGE_TAG"
-          docker run -d -p 3000:3000 \
-            -e DATABASE_URL=$DATABASE_URL \
-            $IMAGE_TAG
+          docker run -d -p 3000:3000 -e DATABASE_URL=$DATABASE_URL $IMAGE_TAG
 
       - name: Show container logs
         run: |
