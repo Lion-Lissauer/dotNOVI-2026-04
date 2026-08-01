@@ -5,55 +5,68 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// Only create pool if DATABASE_URL is configured
-const pool = process.env.DATABASE_URL
-    ? new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },   // ⭐ REQUIRED for hosted Postgres
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    })
-    : null;
+// Build pool configuration safely
+function createPool() {
+  const url = process.env.DATABASE_URL;
 
+  if (!url) {
+    console.warn('DATABASE_URL is not set. Database features will be disabled.');
+    return null;
+  }
+
+  return new Pool({
+    connectionString: url,
+    ssl: { rejectUnauthorized: false }, // Required for most hosted Postgres providers
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+}
+
+const pool = createPool();
+
+// Log unexpected idle errors
 if (pool) {
   pool.on('error', (err) => {
-    console.error('Unexpected error on idle client', err);
+    console.error('Unexpected error on idle client:', err);
   });
 }
 
 // Query helper
 export async function query(text, params = []) {
   if (!pool) {
-    throw new Error('Database not configured - set DATABASE_URL');
+    console.warn('Query attempted without a configured database.');
+    throw new Error('Database not configured');
   }
+
   try {
     return await pool.query(text, params);
   } catch (error) {
-    console.error('Database query error:', error);
+    console.error('Database query error:', error.message);
     throw error;
   }
 }
 
-// Get a single client for transactions if needed
+// Get a client for transactions
 export async function getClient() {
   if (!pool) {
-    throw new Error('Database not configured - set DATABASE_URL');
+    throw new Error('Database not configured');
   }
   return pool.connect();
 }
 
-// Health check
+// Health check — never throws, never crashes the app
 export async function healthCheck() {
   if (!pool) {
-    console.warn('Database not configured (no DATABASE_URL)');
+    console.warn('Health check: DATABASE_URL missing.');
     return false;
   }
+
   try {
-    await query('SELECT NOW()');
+    await pool.query('SELECT NOW()');
     return true;
   } catch (error) {
-    console.error('Database health check failed:', error.message);
+    console.warn('Health check failed:', error.message);
     return false;
   }
 }
