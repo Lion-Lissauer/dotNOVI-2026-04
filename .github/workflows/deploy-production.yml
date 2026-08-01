@@ -34,7 +34,7 @@ jobs:
           IMAGE_TAG: ${{ github.event.client_payload.image_tag || inputs.image_tag }}
           DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
         run: |
-          docker run -d -p 3000:3000 ghcr.io/${{ github.repository }}:$IMAGE_TAG
+          docker run -d -p 3000:3000 ghcr.io/lion-lissauer/dotnovi-2026-04:$IMAGE_TAG
 
       - name: Show container logs
         run: |
