@@ -43,6 +43,11 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.get('/health/simple', (req, res) => {
+  res.status(200).send('OK');
+});
+
+
 /**
  * 404 handler
  */
