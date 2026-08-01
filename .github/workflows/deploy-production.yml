@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Docker image tag to deploy'
+        description: "Full Docker image reference to deploy"
         required: true
         type: string
 
@@ -20,38 +20,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      # 1. Pull the exact image reference provided by CD
       - name: Verify image exists
         run: |
+          echo "Pulling image: ${{ github.event.client_payload.image_tag || inputs.image_tag }}"
           docker pull ${{ github.event.client_payload.image_tag || inputs.image_tag }}
 
+      # 2. Debug DB URL
       - name: Debug DATABASE_URL
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
         run: |
           echo "DATABASE_URL is: $DATABASE_URL"
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
 
+      # 3. Start container using the full image reference
       - name: Start container
         env:
-          IMAGE_TAG: ${{ github.event.client_payload.image_tag || inputs.image_tag }}
+          IMAGE_REF: ${{ github.event.client_payload.image_tag || inputs.image_tag }}
           DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
         run: |
+          echo "Starting container with image: $IMAGE_REF"
           docker run -d -p 3000:3000 \
             -e DATABASE_URL="$DATABASE_URL" \
-            $IMAGE_TAG
+            $IMAGE_REF
 
+      # 4. Show logs
       - name: Show container logs
         run: |
           echo "Container logs:"
           docker logs $(docker ps -q)
 
+      # 5. Show running containers
       - name: Show running containers
         run: docker ps -a
 
+      # 6. Wait for service
       - name: Wait for service to be ready
         run: |
           echo "Waiting for service to become ready..."
           for i in {1..30}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health || true)
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health/simple || true)
             if [ "$STATUS" = "200" ]; then
               echo "Service is ready!"
               break
@@ -60,14 +68,13 @@ jobs:
             sleep 3
           done
 
+      # 7. Smoke tests
       - name: Run smoke tests
         run: |
-          # Wait for service to be ready
-          sleep 10
-          # Check health endpoint
-          curl -f http://localhost:3000/health || exit 1
-          # Check API endpoint
+          sleep 5
+          curl -f http://localhost:3000/health/simple || exit 1
           curl -f http://localhost:3000/api/notes || exit 1
+
   rollback:
     name: Rollback Deployment
     runs-on: ubuntu-latest
@@ -82,12 +89,10 @@ jobs:
       - name: Get previous image tag
         id: previous
         run: |
-          # Get the previous deployment's image tag
-          # This would normally come from your deployment tracking system
-          echo "image_tag=dotnovi:previous" >> $GITHUB_OUTPUT
+          echo "image_tag=ghcr.io/lion-lissauer/dotnovi-2026-04:previous" >> $GITHUB_OUTPUT
+
       - name: Rollback to previous version
         env:
           PREVIOUS_IMAGE: ${{ steps.previous.outputs.image_tag }}
         run: |
           echo "Rolling back to: $PREVIOUS_IMAGE"
-          # kubectl rollout undo deployment/dotnovi
