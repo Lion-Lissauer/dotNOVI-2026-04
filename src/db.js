@@ -16,7 +16,7 @@ function createPool() {
 
   return new Pool({
     connectionString: url,
-    ssl: { rejectUnauthorized: false }, // Required for most hosted Postgres providers
+    ssl: { rejectUnauthorized: false }, // Required for hosted Postgres
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,

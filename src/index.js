@@ -28,7 +28,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use('/health', healthRoutes);
 app.use('/api/notes', notesRoutes);
 
-// Simple health check (always works)
+// Simple health check — used by Docker HEALTHCHECK
 app.get('/health/simple', (req, res) => {
   res.status(200).send('OK');
 });
