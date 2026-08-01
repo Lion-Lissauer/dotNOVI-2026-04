@@ -6,7 +6,8 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 0 * * *'   # Daily at midnight
+    - cron: '0 0 * * *'   # Daily CI run at midnight
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,51 +15,44 @@ jobs:
 
     strategy:
       matrix:
-#       node-version: [18.x, 20.x, 22.x]
         node-version: [18, 20, 24]
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-    - name: Install Dependencies
-      run: npm ci
+      - name: Install Dependencies
+        run: npm ci
 
-    - name: Build application
-      run: npm run build --if-present
+      - name: Build application
+        run: npm run build --if-present
 
-    - name: Run tests
-      run: npm test
+      - name: Run tests
+        run: npm test
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v6
-      with:
-        files: ./coverage/lcov.info
+      - name: Upload coverage
+        uses: codecov/codecov-action@v6
+        with:
+          files: ./coverage/lcov.info
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to production
+        run: echo "Deploying..."
+
 
 #    - name: Run audit
 #      run: npm audit --audit-level=high
 #
 #    - name: Run lint
 #      run: npm run lint --if-present
-
-deploy:
-  needs: [test, build]
-  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-  runs-on: ubuntu-latest
-
-  steps:
-    - name: Deploy to production
-      run: echo "Deploying..."
-
-  name: Security Scan
-
-  on:
-    schedule:
-      - cron: '0 2 * * *'  # Daily at 2 AM
