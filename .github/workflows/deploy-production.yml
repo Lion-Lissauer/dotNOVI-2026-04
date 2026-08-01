@@ -61,6 +61,10 @@ jobs:
             sleep 3
           done
 
+      - name: Debug container env
+        run: |
+          curl -f http://localhost:3000/debug/env
+
       - name: Run smoke tests
         run: |
           sleep 5
