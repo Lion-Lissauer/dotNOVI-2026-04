@@ -5,7 +5,7 @@ on:
     types: [deploy-production]
   workflow_dispatch:
     inputs:
-      image_tag:
+      image_ref:
         description: "Full Docker image reference to deploy"
         required: true
         type: string
@@ -20,23 +20,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # 1. Pull the exact image reference provided by CD
       - name: Verify image exists
         run: |
-          echo "Pulling image: ${{ github.event.client_payload.image_tag || inputs.image_tag }}"
-          docker pull ${{ github.event.client_payload.image_tag || inputs.image_tag }}
+          echo "Pulling image: ${{ github.event.client_payload.image_ref || inputs.image_ref }}"
+          docker pull ${{ github.event.client_payload.image_ref || inputs.image_ref }}
 
-      # 2. Debug DB URL
       - name: Debug DATABASE_URL
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
         run: |
           echo "DATABASE_URL is: $DATABASE_URL"
 
-      # 3. Start container using the full image reference
       - name: Start container
         env:
-          IMAGE_REF: ${{ github.event.client_payload.image_tag || inputs.image_tag }}
+          IMAGE_REF: ${{ github.event.client_payload.image_ref || inputs.image_ref }}
           DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
         run: |
           echo "Starting container with image: $IMAGE_REF"
@@ -44,25 +41,13 @@ jobs:
             -e DATABASE_URL="$DATABASE_URL" \
             $IMAGE_REF
 
-      - name: Show container exit code
+      - name: Show container logs (including exited)
         run: |
-          docker ps -a
-
-      - name: Debug container env
-        run: |
-          curl -f http://localhost:3000/debug/env
-
-      # 4. Show logs
-      - name: Show container logs
-        run: |
-          echo "Container logs:"
           docker logs $(docker ps -a -q)
 
-      # 5. Show running containers
       - name: Show running containers
         run: docker ps -a
 
-      # 6. Wait for service
       - name: Wait for service to be ready
         run: |
           echo "Waiting for service to become ready..."
@@ -76,7 +61,6 @@ jobs:
             sleep 3
           done
 
-      # 7. Smoke tests
       - name: Run smoke tests
         run: |
           sleep 5
@@ -94,13 +78,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Get previous image tag
+      - name: Get previous image ref
         id: previous
         run: |
-          echo "image_tag=ghcr.io/lion-lissauer/dotnovi-2026-04:previous" >> $GITHUB_OUTPUT
+          echo "image_ref=ghcr.io/lion-lissauer/dotnovi-2026-04:previous" >> $GITHUB_OUTPUT
 
       - name: Rollback to previous version
         env:
-          PREVIOUS_IMAGE: ${{ steps.previous.outputs.image_tag }}
+          PREVIOUS_IMAGE: ${{ steps.previous.outputs.image_ref }}
         run: |
           echo "Rolling back to: $PREVIOUS_IMAGE"
