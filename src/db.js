@@ -29,6 +29,7 @@ const pool = createPool();
 async function ensureSchema() {
   if (!pool) return;
 
+  // language=PostgreSQL
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notes (
