@@ -16,7 +16,7 @@ function createPool() {
 
   return new Pool({
     connectionString: url,
-    ssl: { rejectUnauthorized: false }, // Required for hosted Postgres
+    ssl: false, // IMPORTANT: disable SSL for local/Docker Postgres
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
