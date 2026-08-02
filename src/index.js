@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { query, healthCheck } from './db.js';
+import { initDatabase } from './db-init.js';   // NEW: DB initializer
 import healthRoutes from './routes/health.js';
 import notesRoutes from './routes/notes.js';
 
@@ -44,7 +44,7 @@ app.get('/debug/env', (req, res) => {
 // Home page
 app.get('/', async (req, res) => {
   try {
-    const result = await query(
+    const result = await req.app.locals.db.query(
         'SELECT id, title, content, created_at FROM notes ORDER BY created_at DESC'
     );
     res.render('index', { notes: result.rows });
@@ -65,30 +65,27 @@ app.use((err, req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Safe startup — DB failures never crash the app
-const server = app.listen(PORT, () => {
-  console.log(`dotNOVI listening on port ${PORT}`);
+// ⭐ NEW: Safe startup — DB initializes BEFORE server starts
+(async () => {
+  try {
+    const pool = await initDatabase();   // Wait for Postgres + ensure schema
+    app.locals.db = pool;                // Attach pool to app
 
-  healthCheck()
-      .then((isHealthy) => {
-        if (isHealthy) {
-          console.log('Database connection: OK');
-        } else {
-          console.warn('Database connection: FAILED — check DATABASE_URL');
-        }
-      })
-      .catch((err) => {
-        console.warn('Database health check error:', err.message);
+    const server = app.listen(PORT, () => {
+      console.log(`dotNOVI listening on port ${PORT}`);
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
       });
-});
+    });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
-
-export default app;
+  } catch (err) {
+    console.error('Fatal startup error:', err);
+    process.exit(1);
+  }
+})();
