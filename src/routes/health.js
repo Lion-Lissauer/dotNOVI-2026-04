@@ -1,30 +1,29 @@
 import express from 'express';
-import { healthCheck } from '../db.js';
 
 const router = express.Router();
 
-/**
- * GET /health
- * Health check endpoint for monitoring and load balancers
- */
 router.get('/', async (req, res) => {
   try {
-    const dbHealthy = await healthCheck();
+    // Simple DB check
+    const dbStatus = await req.app.locals.db
+        .query('SELECT NOW()')
+        .then(() => 'healthy')
+        .catch(() => 'unavailable');
 
-    const health = {
-      status: dbHealthy ? 'healthy' : 'degraded',
+    res.json({
+      status: dbStatus === 'healthy' ? 'healthy' : 'degraded',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      database: dbHealthy ? 'connected' : 'disconnected',
-    };
-
-    const statusCode = dbHealthy ? 200 : 503;
-    res.status(statusCode).json(health);
+      database: dbStatus,
+    });
   } catch (error) {
-    res.status(503).json({
-      status: 'unhealthy',
+    console.error('Health check error:', error);
+
+    res.status(500).json({
+      status: 'error',
       timestamp: new Date().toISOString(),
-      error: error.message,
+      uptime: process.uptime(),
+      database: 'unavailable',
     });
   }
 });
