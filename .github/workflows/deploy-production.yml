@@ -24,19 +24,16 @@ jobs:
           echo "Pulling image: ${{ github.event.client_payload.image_ref || inputs.image_ref }}"
           docker pull ${{ github.event.client_payload.image_ref || inputs.image_ref }}
 
-      - name: Debug DATABASE_URL
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
-        run: |
-          echo "DATABASE_URL is: $DATABASE_URL"
+      - name: Create network
+        run: docker network create appnet || true
 
       - name: Start Postgres
         run: |
           docker run -d \
             --name postgres \
+            --network appnet \
             -e POSTGRES_PASSWORD=postgres \
             -e POSTGRES_DB=dotnovi \
-            -p 5432:5432 \
             postgres:16
 
       - name: Start container
