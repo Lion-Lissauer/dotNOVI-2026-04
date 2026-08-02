@@ -11,7 +11,4 @@ export default {
     '**/tests/**/*.test.js',
   ],
   transform: {},
-  moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
-  },
 };
