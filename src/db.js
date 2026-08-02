@@ -16,5 +16,3 @@ export async function healthCheck(pool) {
     return false;
   }
 }
-
-//
