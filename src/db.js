@@ -25,6 +25,30 @@ function createPool() {
 
 const pool = createPool();
 
+// Ensure required tables exist
+async function ensureSchema() {
+  if (!pool) return;
+
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notes (
+                                         id SERIAL PRIMARY KEY,
+                                         text TEXT NOT NULL,
+                                         created_at TIMESTAMP DEFAULT NOW()
+        );
+    `);
+
+    console.log('Database schema ensured.');
+  } catch (err) {
+    console.error('Failed to ensure schema:', err);
+  }
+}
+
+// Kick off schema creation (non-blocking)
+ensureSchema().catch((err) => {
+  console.error('Schema initialization error:', err);
+});
+
 // Log unexpected idle errors
 if (pool) {
   pool.on('error', (err) => {
