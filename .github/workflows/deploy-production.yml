@@ -38,9 +38,8 @@ jobs:
 
       - name: Run migrations
         run: |
-          docker run --rm \
+          docker run --rm --entrypoint "" \
             --network appnet \
-            --entrypoint ""
             -e DATABASE_URL="postgres://postgres:postgres@postgres:5432/dotnovi" \
             ${{ github.event.client_payload.image_ref || inputs.image_ref }} \
             npx prisma migrate deploy
