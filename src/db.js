@@ -3,36 +3,28 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+let pool = null;
 const { Pool } = pg;
-
-// Build pool configuration safely
-function createPool() {
-  const url = process.env.DATABASE_URL;
-
-  if (!url) {
-    console.warn('DATABASE_URL is not set. Database features will be disabled.');
-    return null;
-  }
-
-  return new Pool({
-    connectionString: url,
-    ssl: false, // IMPORTANT: disable SSL for Docker/Postgres
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-  });
-}
-
-const pool = createPool();
 
 // Wait for Postgres to become ready
 async function waitForPostgres() {
-  if (!pool) return;
+  const url = process.env.DATABASE_URL;
+
+  if (!url) {
+    console.warn('DATABASE_URL is not set.');
+    return;
+  }
+
+  const testPool = new Pool({
+    connectionString: url,
+    ssl: false,
+  });
 
   for (let i = 0; i < 20; i++) {
     try {
-      await pool.query('SELECT 1');
+      await testPool.query('SELECT 1');
       console.log('Postgres is ready.');
+      await testPool.end();
       return;
     } catch (err) {
       console.log('Postgres not ready yet, retrying...');
@@ -43,19 +35,30 @@ async function waitForPostgres() {
   console.error('Postgres did not become ready in time.');
 }
 
+// Create pool AFTER Postgres is ready
+function createPool() {
+  const url = process.env.DATABASE_URL;
+
+  return new Pool({
+    connectionString: url,
+    ssl: false,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+}
+
 // Ensure required tables exist
 async function ensureSchema() {
-  if (!pool) return;
-
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notes (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
-        content TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW(),
+                                         id SERIAL PRIMARY KEY,
+                                         title TEXT NOT NULL,
+                                         content TEXT NOT NULL,
+                                         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
-      );
+        );
     `);
 
     console.log('Database schema ensured.');
@@ -65,54 +68,13 @@ async function ensureSchema() {
 }
 
 // Startup sequence
-waitForPostgres()
-    .then(() => ensureSchema())
-    .catch((err) => console.error('Startup error:', err));
-
-// Log unexpected idle errors
-if (pool) {
-  pool.on('error', (err) => {
-    console.error('Unexpected error on idle client:', err);
-  });
-}
+await waitForPostgres();
+pool = createPool();
+await ensureSchema();
 
 // Query helper
 export async function query(text, params = []) {
-  if (!pool) {
-    console.warn('Query attempted without a configured database.');
-    throw new Error('Database not configured');
-  }
-
-  try {
-    return await pool.query(text, params);
-  } catch (error) {
-    console.error('Database query error:', error.message);
-    throw error;
-  }
-}
-
-// Get a client for transactions
-export async function getClient() {
-  if (!pool) {
-    throw new Error('Database not configured');
-  }
-  return pool.connect();
-}
-
-// Health check — never throws, never crashes the app
-export async function healthCheck() {
-  if (!pool) {
-    console.warn('Health check: DATABASE_URL missing.');
-    return false;
-  }
-
-  try {
-    await pool.query('SELECT NOW()');
-    return true;
-  } catch (error) {
-    console.warn('Health check failed:', error.message);
-    return false;
-  }
+  return pool.query(text, params);
 }
 
 export default pool;
