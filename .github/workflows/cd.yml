@@ -65,7 +65,7 @@ jobs:
         uses: peter-evans/repository-dispatch@v4
         with:
           event-type: deploy-production
-          client-payload: |
+          client-payload: >
             {
               "image_ref": "${{ needs.build-and-push.outputs.image_ref }}"
             }
