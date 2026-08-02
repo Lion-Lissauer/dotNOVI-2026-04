@@ -24,25 +24,30 @@ jobs:
           echo "Pulling image: ${{ github.event.client_payload.image_ref || inputs.image_ref }}"
           docker pull ${{ github.event.client_payload.image_ref || inputs.image_ref }}
 
-      - name: Debug DATABASE_URL
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
+      - name: Create network
+        run: docker network create appnet || true
+
+      - name: Start Postgres
         run: |
-          echo "DATABASE_URL is: $DATABASE_URL"
+          docker run -d \
+            --name postgres \
+            --network appnet \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=dotnovi \
+            postgres:16
 
       - name: Start container
         env:
           IMAGE_REF: ${{ github.event.client_payload.image_ref || inputs.image_ref }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
+          NODE_ENV: production
         run: |
           echo "Starting container with image: $IMAGE_REF"
-          docker run -d -p 3000:3000 \
-            -e DATABASE_URL="$DATABASE_URL" \
+          docker run -d \
+            --network appnet \
+            -e DATABASE_URL="postgres://postgres:postgres@postgres:5432/dotnovi" \
+            -e NODE_ENV="$NODE_ENV" \
+            -p 3000:3000 \
             $IMAGE_REF
-
-      - name: Show container logs (including exited)
-        run: |
-          docker logs $(docker ps -a -q)
 
       - name: Show running containers
         run: docker ps -a
@@ -69,6 +74,11 @@ jobs:
           sleep 5
           curl -f http://localhost:3000/health/simple || exit 1
           curl -f http://localhost:3000/api/notes || exit 1
+
+      - name: Show logs after smoke tests
+        if: failure()
+        run: |
+          docker ps -a -q | xargs -I {} docker logs {}
 
   rollback:
     name: Rollback Deployment
