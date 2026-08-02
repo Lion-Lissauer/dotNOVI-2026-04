@@ -2,13 +2,12 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { initDatabase } from './db-init.js';   // NEW: DB initializer
+import { initDatabase } from './db-init.js';
 import healthRoutes from './routes/health.js';
 import notesRoutes from './routes/notes.js';
 
 dotenv.config();
 
-// __dirname replacement for ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -28,7 +27,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use('/health', healthRoutes);
 app.use('/api/notes', notesRoutes);
 
-// Simple health check — used by Docker HEALTHCHECK
+// Simple health check
 app.get('/health/simple', (req, res) => {
   res.status(200).send('OK');
 });
@@ -65,27 +64,27 @@ app.use((err, req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// ⭐ NEW: Safe startup — DB initializes BEFORE server starts
-(async () => {
-  try {
-    const pool = await initDatabase();   // Wait for Postgres + ensure schema
-    app.locals.db = pool;                // Attach pool to app
+// ⭐ EXPORT THE APP FOR TESTS
+export default app;
 
-    const server = app.listen(PORT, () => {
-      console.log(`dotNOVI listening on port ${PORT}`);
-    });
+// ⭐ ONLY START SERVER IN NON-TEST ENVIRONMENTS
+if (process.env.NODE_ENV !== 'test') {
+  (async () => {
+    try {
+      const pool = await initDatabase();
+      app.locals.db = pool;
 
-    // Graceful shutdown
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM received, shutting down gracefully');
-      server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
+      const server = app.listen(PORT, () => {
+        console.log(`dotNOVI listening on port ${PORT}`);
       });
-    });
 
-  } catch (err) {
-    console.error('Fatal startup error:', err);
-    process.exit(1);
-  }
-})();
+      process.on('SIGTERM', () => {
+        server.close(() => process.exit(0));
+      });
+
+    } catch (err) {
+      console.error('Fatal startup error:', err);
+      process.exit(1);
+    }
+  })();
+}
