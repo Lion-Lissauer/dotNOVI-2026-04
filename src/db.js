@@ -16,7 +16,7 @@ function createPool() {
 
   return new Pool({
     connectionString: url,
-    ssl: false, // IMPORTANT: disable SSL for local/Docker Postgres
+    ssl: false, // IMPORTANT: disable SSL for Docker/Postgres
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
@@ -25,18 +25,37 @@ function createPool() {
 
 const pool = createPool();
 
+// Wait for Postgres to become ready
+async function waitForPostgres() {
+  if (!pool) return;
+
+  for (let i = 0; i < 20; i++) {
+    try {
+      await pool.query('SELECT 1');
+      console.log('Postgres is ready.');
+      return;
+    } catch (err) {
+      console.log('Postgres not ready yet, retrying...');
+      await new Promise((res) => setTimeout(res, 500));
+    }
+  }
+
+  console.error('Postgres did not become ready in time.');
+}
+
 // Ensure required tables exist
 async function ensureSchema() {
   if (!pool) return;
 
-  // language=PostgreSQL
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notes (
-                                         id SERIAL PRIMARY KEY,
-                                         text TEXT NOT NULL,
-                                         created_at TIMESTAMP DEFAULT NOW()
-        );
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
     `);
 
     console.log('Database schema ensured.');
@@ -45,10 +64,10 @@ async function ensureSchema() {
   }
 }
 
-// Kick off schema creation (non-blocking)
-ensureSchema().catch((err) => {
-  console.error('Schema initialization error:', err);
-});
+// Startup sequence
+waitForPostgres()
+    .then(() => ensureSchema())
+    .catch((err) => console.error('Startup error:', err));
 
 // Log unexpected idle errors
 if (pool) {
