@@ -30,14 +30,26 @@ jobs:
         run: |
           echo "DATABASE_URL is: $DATABASE_URL"
 
+      - name: Start Postgres
+        run: |
+          docker run -d \
+            --name postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=dotnovi \
+            -p 5432:5432 \
+            postgres:16
+
       - name: Start container
         env:
           IMAGE_REF: ${{ github.event.client_payload.image_ref || inputs.image_ref }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/dotnovi
+          NODE_ENV: production
         run: |
           echo "Starting container with image: $IMAGE_REF"
           docker run -d -p 3000:3000 \
             -e DATABASE_URL="$DATABASE_URL" \
+            -e NODE_ENV="$NODE_ENV" \
+            --network host \
             $IMAGE_REF
 
       - name: Show container logs (including exited)
