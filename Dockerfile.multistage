@@ -23,4 +23,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=5s --timeout=3s --retries=10 \
   CMD wget -qO- http://localhost:3000/health/simple || exit 1
 
-CMD ["node", "index.js"]
+CMD ["node", "src/index.js"]
