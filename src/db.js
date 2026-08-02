@@ -1,3 +1,5 @@
+// db.js — helper-only module
+
 export async function query(pool, text, params = []) {
   return pool.query(text, params);
 }
