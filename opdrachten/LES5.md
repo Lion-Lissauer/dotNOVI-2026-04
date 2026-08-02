@@ -174,7 +174,7 @@ git push origin main
 3. Wait for workflow to complete
 4. Check image in GHCR:
    ```
-   https://github.com/username/dotnovi-app/pkgs/container/dotnovi-app
+   https://github.com/lion-lissauer/dotnovi-app/pkgs/container/dotnovi-app
    ```
 
 ### Stap 5: Manual Deployment
