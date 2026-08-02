@@ -1,5 +1,4 @@
 import express from 'express';
-import { query } from '../db.js';
 
 const router = express.Router();
 
@@ -9,7 +8,9 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
   try {
-    const result = await query('SELECT id, title, content, created_at, updated_at FROM notes ORDER BY created_at DESC');
+    const result = await req.app.locals.db.query(
+        'SELECT id, title, content, created_at, updated_at FROM notes ORDER BY created_at DESC'
+    );
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching notes:', error);
@@ -25,7 +26,10 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await query('SELECT id, title, content, created_at, updated_at FROM notes WHERE id = $1', [id]);
+    const result = await req.app.locals.db.query(
+        'SELECT id, title, content, created_at, updated_at FROM notes WHERE id = $1',
+        [id]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Note not found' });
@@ -45,15 +49,14 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   const { title, content } = req.body;
 
-  // Validation
   if (!title || !content) {
     return res.status(400).json({ error: 'Title and content are required' });
   }
 
   try {
-    const result = await query(
-      'INSERT INTO notes (title, content) VALUES ($1, $2) RETURNING id, title, content, created_at, updated_at',
-      [title, content]
+    const result = await req.app.locals.db.query(
+        'INSERT INTO notes (title, content) VALUES ($1, $2) RETURNING id, title, content, created_at, updated_at',
+        [title, content]
     );
 
     res.status(201).json(result.rows[0]);
@@ -71,21 +74,23 @@ router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
 
-  // Validation
   if (!title || !content) {
     return res.status(400).json({ error: 'Title and content are required' });
   }
 
   try {
-    // Check if note exists
-    const checkResult = await query('SELECT id FROM notes WHERE id = $1', [id]);
+    const checkResult = await req.app.locals.db.query(
+        'SELECT id FROM notes WHERE id = $1',
+        [id]
+    );
+
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ error: 'Note not found' });
     }
 
-    const result = await query(
-      'UPDATE notes SET title = $1, content = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, title, content, created_at, updated_at',
-      [title, content, id]
+    const result = await req.app.locals.db.query(
+        'UPDATE notes SET title = $1, content = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, title, content, created_at, updated_at',
+        [title, content, id]
     );
 
     res.json(result.rows[0]);
@@ -103,7 +108,10 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await query('DELETE FROM notes WHERE id = $1 RETURNING id', [id]);
+    const result = await req.app.locals.db.query(
+        'DELETE FROM notes WHERE id = $1 RETURNING id',
+        [id]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Note not found' });
