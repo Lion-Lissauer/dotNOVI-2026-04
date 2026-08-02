@@ -75,9 +75,10 @@ jobs:
           curl -f http://localhost:3000/health/simple || exit 1
           curl -f http://localhost:3000/api/notes || exit 1
 
-      - name: Show container logs (including exited)
+      - name: Show logs after smoke tests
+        if: failure()
         run: |
-          docker ps -a -q | xargs -I {} docker logs {}    
+          docker ps -a -q | xargs -I {} docker logs {}
 
   rollback:
     name: Rollback Deployment
