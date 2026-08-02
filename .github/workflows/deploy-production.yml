@@ -32,12 +32,13 @@ jobs:
 
       - name: Start container
         env:
-          IMAGE_REF: ${{ github.event.client_payload.image_ref || inputs.image_ref }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
+          NODE_ENV: production
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          echo "Starting container with image: $IMAGE_REF"
-          docker run -d -p 3000:3000 \
-            -e DATABASE_URL="$DATABASE_URL" \
+          docker run -d \
+            -e NODE_ENV=production \
+            -e DATABASE_URL=$DATABASE_URL \
+            -p 3000:3000 \
             $IMAGE_REF
 
       - name: Show container logs (including exited)
