@@ -86,16 +86,16 @@ Artifactory
 
 ```dockerfile
 # 1. Tag image
-docker tag dotnovi:latest ghcr.io/username/dotnovi:latest
+docker tag dotnovi:latest ghcr.io/lion-lissauer/dotnovi:latest
 
 # 2. Login to registry
 docker login ghcr.io
 
 # 3. Push image
-docker push ghcr.io/username/dotnovi:latest
+docker push ghcr.io/lion-lissauer/dotnovi:latest
 
 # 4. Others can pull
-docker pull ghcr.io/username/dotnovi:latest
+docker pull ghcr.io/lion-lissauer/dotnovi:latest
 ```
 
 ## GitHub Actions CD Workflows
@@ -139,10 +139,10 @@ Automatically:
 $env:GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 
 # Login locally
-echo $env:GITHUB_TOKEN | docker login ghcr.io -u username --password-stdin
+echo $env:GITHUB_TOKEN | docker login ghcr.io -u lion-lissauer --password-stdin
 
 # Verify
-docker pull ghcr.io/lion-lissauer/dotnovi:main-98eaa20
+docker pull ghcr.io/lion-lissauer/dotnovi-2026-04:latest
 ```
 
 ### Stap 2: Setup GitHub Secrets
